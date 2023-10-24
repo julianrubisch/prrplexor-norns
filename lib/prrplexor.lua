@@ -11,7 +11,9 @@ local specs = {
   {id = 'amp', name = 'level', type = 'control', min = 0, max = 1, warp = 'lin', default = 0.1},
   {id = 'fb', name = 'feedback', type = 'control', min = 0, max = 10, warp = 'lin', default = 0.5},
   {id = 'attack', name = 'attack', type = 'control', min = 0.001, max = 10, warp = 'exp', default = 0.5, formatter = function(param) return (round_form(param:get(),0.01," s")) end},
-  {id = 'release', name = 'release', type = 'control', min = 0.001, max = 10, warp = 'exp', default = 1, formatter = function(param) return (round_form(param:get(),0.01," s")) end}
+  {id = 'release', name = 'release', type = 'control', min = 0.001, max = 10, warp = 'exp', default = 1, formatter = function(param) return (round_form(param:get(),0.01," s")) end},
+  {type = "separator", name = "master"},
+  {id = 'pan', name = 'pan', type = 'control', min = -1, max = 1, warp = 'lin', default = 0}
 }
 
 function PRRPLEXOR.add_params()

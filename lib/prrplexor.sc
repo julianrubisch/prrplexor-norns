@@ -28,8 +28,8 @@ Prrplexor {
 					);
 
 					sig = sig * envelope * \amp.kr(0);
-
-					Out.ar(\out.kr(0), sig!2);
+					sig = Pan2.ar(sig, \pan.kr(0).lag3(\pan_slew.kr(0.5)));
+					Out.ar(\out.kr(0), sig);
 				}).add;
 			}
 		}
@@ -49,8 +49,9 @@ Prrplexor {
 			\fb -> 0,
 			\amp -> 0.1,
 			\attack -> 0.5,
+			\pan -> 0,
 			\sustain -> 1,
-			\release -> 1,
+			\release -> 1
 		];
 
 		singleVoices = Dictionary.new;
