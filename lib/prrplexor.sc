@@ -14,11 +14,16 @@ Prrplexor {
 
 			s.waitForBoot {
 				SynthDef.new(\prrplexor_osc, {
-					var sig, envelope;
+					var sig, envelope, panLFO;
 
 					sig = SinOscFB.ar(
 						\freq.kr(440),
 						\fb.kr(0)
+					);
+
+					panLFO = SinOsc.ar(
+						\panFreq.kr(1),
+						Rand(0, 2pi)
 					);
 
 					envelope = EnvGen.kr(
@@ -28,7 +33,7 @@ Prrplexor {
 					);
 
 					sig = sig * envelope * \amp.kr(0);
-					sig = Pan2.ar(sig, \pan.kr(0).lag3(\pan_slew.kr(0.5)));
+					sig = Pan2.ar(sig, Clip.ar((\pan.kr(0) + (panLFO * \panAmp.kr(0))), -1, 1).lag3(\pan_slew.kr(0.5)));
 					Out.ar(\out.kr(0), sig);
 				}).add;
 			}
@@ -50,6 +55,8 @@ Prrplexor {
 			\amp -> 0.1,
 			\attack -> 0.5,
 			\pan -> 0,
+			\panFreq -> 1,
+			\panAmp -> 0,
 			\sustain -> 1,
 			\release -> 1
 		];
