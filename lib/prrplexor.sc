@@ -14,11 +14,16 @@ Prrplexor {
 
 			s.waitForBoot {
 				SynthDef.new(\prrplexor_osc, {
-					var sig, envelope, panLFO;
+					var sig, envelope, panLFO, fbLFO;
+
+					fbLFO = LFTri.ar(
+						\fbFreq.kr(1),
+						Rand(0, 2pi)
+					);
 
 					sig = SinOscFB.ar(
 						\freq.kr(440),
-						\fb.kr(0)
+						(\fb.kr(0) + (fbLFO * \fbAmp.kr(0)))
 					);
 
 					panLFO = SinOsc.ar(
@@ -27,7 +32,7 @@ Prrplexor {
 					);
 
 					envelope = EnvGen.kr(
-						envelope: Env.asr(attackTime: \attack.kr(0.5), sustainLevel: \sustain.kr(1), releaseTime: \release.kr(1), level: 1),
+						envelope: Env.asr(attackTime: \attack.kr(0.5), sustainLevel: \sustain.kr(1), releaseTime: \release.kr(1)),
 						gate: \stopGate.kr(1),
 						doneAction: 2
 					);
@@ -57,6 +62,8 @@ Prrplexor {
 			\pan -> 0,
 			\panFreq -> 1,
 			\panAmp -> 0,
+			\fbFreq -> 1,
+			\fbAmp -> 0,
 			\sustain -> 1,
 			\release -> 1
 		];

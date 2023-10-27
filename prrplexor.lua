@@ -15,10 +15,9 @@ local cluster_size = 5
 local cluster_width = 1 -- octaves
 local transposition = 0
 local spread = 0.0
-local pan_mod = 0.0 -- a composite param for amp and frew
+local pan_mod = 0.0 -- a composite param for amp and freq
+local fb_mod = 0.0 -- a composite param for amp and freq
 local dials
-
--- TODO feedback LFOs
 
 function init()
 	prrplexor_setup.add_params()
@@ -27,7 +26,8 @@ function init()
 	  cluster_width = UI.Dial.new(10, 40, 18, cluster_width, 1, 6, 1, 0, {}, "", "width"),
 	  feedback = UI.Dial.new(10, 12, 18, params:get("all_fb"), 0.0, 10.0, 0.1, 0, {}, "", "feedback"),
 	  spread = UI.Dial.new(10, 40, 18, spread, 0.0, 1.0, 0.01, 0, {}, "", "spread"),
-	  pan_mod = UI.Dial.new(10, 12, 18, pan_mod, 0.0, 1.0, 0.01, 0, {}, "", "panning")
+	  fb_mod = UI.Dial.new(10, 12, 18, fb_mod, 0.0, 1.0, 0.01, 0, {}, "", "feedback"),
+	  pan_mod = UI.Dial.new(10, 40, 18, pan_mod, 0.0, 1.0, 0.01, 0, {}, "", "spread"),
 	}
 	redraw()
 end
@@ -51,13 +51,13 @@ function enc(n, d)
       params:delta("all_fb", d / 2)
       dials["feedback"]:set_value(params:get("all_fb"))
     elseif tabs.index == 3 then
-      pan_mod = util.clamp(pan_mod + d / 10, 0., 1.)
-      dials["pan_mod"]:set_value(pan_mod)
+      fb_mod = util.clamp(fb_mod + d / 10, 0., 1.)
+      dials["fb_mod"]:set_value(fb_mod)
       
-      pan_amp_range = params:get_range("all_panAmp")
-      pan_freq_range = params:get_range("all_panFreq")
-      params:set("all_panAmp", util.linlin(0., 1., pan_amp_range[1], pan_amp_range[2], pan_mod))
-      params:set("all_panFreq", util.linlin(0., 1., pan_freq_range[1], pan_freq_range[2], pan_mod))
+      fb_amp_range = params:get_range("all_fbAmp")
+      fb_freq_range = params:get_range("all_fbFreq")
+      params:set("all_fbAmp", util.linlin(0., 1., fb_amp_range[1], fb_amp_range[2], fb_mod))
+      params:set("all_fbFreq", util.linlin(0., 1., fb_freq_range[1], fb_freq_range[2], fb_mod))
     end
   elseif n == 3 then
     if tabs.index == 1 then
@@ -71,6 +71,14 @@ function enc(n, d)
         voice_pan = util.linlin(1, cluster_size, -1. * spread, 1. * spread, i)
         params:set(i .. "_pan", voice_pan)
       end
+    elseif tabs.index == 3 then
+      pan_mod = util.clamp(pan_mod + d / 10, 0., 1.)
+      dials["pan_mod"]:set_value(pan_mod)
+      
+      pan_amp_range = params:get_range("all_panAmp")
+      pan_freq_range = params:get_range("all_panFreq")
+      params:set("all_panAmp", util.linlin(0., 1., pan_amp_range[1], pan_amp_range[2], pan_mod))
+      params:set("all_panFreq", util.linlin(0., 1., pan_freq_range[1], pan_freq_range[2], pan_mod))  
     end
   end
   
@@ -101,7 +109,10 @@ function redraw()
   -- mod
   elseif tabs.index == 3 then
     dials["pan_mod"]:redraw()
+    dials["fb_mod"]:redraw()
     screen.move(19, 24)
+    screen.text_center(fb_mod)
+    screen.move(19, 52)
     screen.text_center(pan_mod)
   end
   

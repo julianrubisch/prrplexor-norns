@@ -13,8 +13,10 @@ local specs = {
   {id = 'attack', name = 'attack', type = 'control', min = 0.001, max = 10, warp = 'exp', default = 0.5, formatter = function(param) return (round_form(param:get(),0.01," s")) end},
   {id = 'release', name = 'release', type = 'control', min = 0.001, max = 10, warp = 'exp', default = 1, formatter = function(param) return (round_form(param:get(),0.01," s")) end},
   {type = "separator", name = "modulation"},
-  {id = 'panFreq', name = 'pan freq', type = 'control', min = 0.001, max = 2, warp = 'exp', default = 0},
-  {id = 'panAmp', name = 'pan amp', type = 'control', min = 0, max = 1, warp = 'lin', default = 0},
+  {id = 'panFreq', name = 'pan lfo freq', type = 'control', min = 0.001, max = 2, warp = 'exp', default = 0},
+  {id = 'panAmp', name = 'pan lfo amp', type = 'control', min = 0, max = 1, warp = 'lin', default = 0},
+  {id = 'fbFreq', name = 'fb lfo freq', type = 'control', min = 0.001, max = 2, warp = 'exp', default = 0},
+  {id = 'fbAmp', name = 'fb lfo amp', type = 'control', min = 0, max = 1, warp = 'lin', default = 0},
   {type = "separator", name = "master"},
   {id = 'pan', name = 'pan', type = 'control', min = -1, max = 1, warp = 'lin', default = 0}
 }
