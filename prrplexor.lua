@@ -10,19 +10,24 @@ local MusicUtil = require 'musicutil'
 local UI = require 'ui'
 
 local tabs = UI.Tabs.new(1, {"cluster", "chaos", "mod"})
+-- TODO refactor into params
 local cluster_size = 5
 local cluster_width = 1 -- octaves
 local transposition = 0
 local spread = 0.0
+local pan_mod = 0.0 -- a composite param for amp and frew
 local dials
+
+-- TODO feedback LFOs
 
 function init()
 	prrplexor_setup.add_params()
 	dials = {
-	  cluster_size = UI.Dial.new(10, 20, 14, cluster_size, 1, 10, 1, 0, {}, "", "size"),
-	  cluster_width = UI.Dial.new(10, 44, 14, cluster_width, 1, 6, 1, 0, {}, "", "width"),
-	  feedback = UI.Dial.new(10, 20, 14, params:get("all_fb"), 0.0, 10.0, 0.01, 0, {}, "", "feedback"),
-	  spread = UI.Dial.new(10, 44, 14, spread, 0.0, 1.0, 0.01, 0, {}, "", "spread")
+	  cluster_size = UI.Dial.new(10, 12, 18, cluster_size, 1, 10, 1, 0, {}, "", "size"),
+	  cluster_width = UI.Dial.new(10, 40, 18, cluster_width, 1, 6, 1, 0, {}, "", "width"),
+	  feedback = UI.Dial.new(10, 12, 18, params:get("all_fb"), 0.0, 10.0, 0.1, 0, {}, "", "feedback"),
+	  spread = UI.Dial.new(10, 40, 18, spread, 0.0, 1.0, 0.01, 0, {}, "", "spread"),
+	  pan_mod = UI.Dial.new(10, 12, 18, pan_mod, 0.0, 1.0, 0.01, 0, {}, "", "panning")
 	}
 	redraw()
 end
@@ -43,8 +48,16 @@ function enc(n, d)
       cluster_size = util.clamp(cluster_size + d, 1, 10)
       dials["cluster_size"]:set_value(cluster_size)
     elseif tabs.index == 2 then
-      params:delta("all_fb", d / 10)
+      params:delta("all_fb", d / 2)
       dials["feedback"]:set_value(params:get("all_fb"))
+    elseif tabs.index == 3 then
+      pan_mod = util.clamp(pan_mod + d / 10, 0., 1.)
+      dials["pan_mod"]:set_value(pan_mod)
+      
+      pan_amp_range = params:get_range("all_panAmp")
+      pan_freq_range = params:get_range("all_panFreq")
+      params:set("all_panAmp", util.linlin(0., 1., pan_amp_range[1], pan_amp_range[2], pan_mod))
+      params:set("all_panFreq", util.linlin(0., 1., pan_freq_range[1], pan_freq_range[2], pan_mod))
     end
   elseif n == 3 then
     if tabs.index == 1 then
@@ -66,26 +79,33 @@ end
 
 function redraw()
   screen.clear()
+  
   tabs:redraw()
   
   -- cluster
   if tabs.index == 1 then
     dials["cluster_size"]:redraw()
     dials["cluster_width"]:redraw()
-    screen.move(17, 30)
+    screen.move(19, 24)
     screen.text_center(cluster_size)
-    screen.move(17, 54)
+    screen.move(19, 52)
     screen.text_center(cluster_width)
   -- chaos
   elseif tabs.index == 2 then
     dials["feedback"]:redraw()
     dials["spread"]:redraw()
-    screen.move(17, 30)
+    screen.move(19, 24)
     screen.text_center(params:get("all_fb"))
-    screen.move(17, 54)
+    screen.move(19, 52)
     screen.text_center(spread)
+  -- mod
+  elseif tabs.index == 3 then
+    dials["pan_mod"]:redraw()
+    screen.move(19, 24)
+    screen.text_center(pan_mod)
   end
   
+  screen.font_size(8)
   screen.update()
 end
 
