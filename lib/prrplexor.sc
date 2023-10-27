@@ -5,6 +5,7 @@ Prrplexor {
 	var <voiceParams;
 	var <voiceGroup;
 	var <singleVoices;
+	var <specFlatness;
 
 	*initClass {
 		voiceKeys = Array.fill(10, { arg i; (i+1).asSymbol });
@@ -14,7 +15,7 @@ Prrplexor {
 
 			s.waitForBoot {
 				SynthDef.new(\prrplexor_osc, {
-					var sig, envelope, panLFO, fbLFO;
+					var sig, envelope, panLFO, fbLFO, chain, flat;
 
 					fbLFO = LFTri.ar(
 						\fbFreq.kr(1),
@@ -38,8 +39,13 @@ Prrplexor {
 					);
 
 					sig = sig * envelope * \amp.kr(0);
+
+					chain = FFT(LocalBuf(1024), sig);
+					flat = SpecFlatness.kr(chain);
+
 					sig = Pan2.ar(sig, Clip.ar((\pan.kr(0) + (panLFO * \panAmp.kr(0))), -1, 1).lag3(\pan_slew.kr(0.5)));
-					Out.ar(\out.kr(0), sig);
+					Out.ar(0, sig);
+					Out.kr(\specFlatOut.kr(1), flat);
 				}).add;
 			}
 		}
@@ -74,7 +80,11 @@ Prrplexor {
 		voiceKeys.do({ |voiceKey|
 			singleVoices[voiceKey] = Group.new(voiceGroup);
 			voiceParams[voiceKey] = Dictionary.newFrom(globalParams);
-		})
+		});
+
+		specFlatness = Bus.control(s);
+
+		s.sync;
 	}
 
 	playVoice { |voiceKey, freq|
@@ -82,7 +92,7 @@ Prrplexor {
 		singleVoices[voiceKey].set(\stopGate, -1.05); // -1.05 is 'forced release' with 50ms (0.05s) cutoff time
 		voiceParams[voiceKey][\freq] = freq;
 
-		Synth.new(\prrplexor_osc, [\freq, freq] ++ voiceParams[voiceKey].getPairs, singleVoices[voiceKey]);
+		Synth.new(\prrplexor_osc, [\freq, freq, \specFlatOut, specFlatness.index] ++ voiceParams[voiceKey].getPairs, singleVoices[voiceKey]);
 	}
 
 	trigger { |voiceKey, freq|

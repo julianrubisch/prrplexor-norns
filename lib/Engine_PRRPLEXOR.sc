@@ -14,7 +14,6 @@ Engine_PRRPLEXOR : CroneEngine {
 			kernel.trigger(voiceKey,freq);
 		});
 
-		// NEW: since each voice shares the same parameters ('globalParams'),
 		//   we can define a command for each parameter that accepts a voice index
 		kernel.globalParams.keysValuesDo({ arg paramKey;
 			this.addCommand(paramKey, "sf", {arg msg;
@@ -22,11 +21,15 @@ Engine_PRRPLEXOR : CroneEngine {
 			});
 		});
 
-		// NEW: add a command to free all the voices
 		this.addCommand(\free_all_notes, "", {
 			kernel.freeAllNotes();
 		});
 
+		this.addPoll(\specFlatness, {
+			var flat = kernel.specFlatness.getSynchronous;
+
+			flat
+		});
 	} // alloc
 
 

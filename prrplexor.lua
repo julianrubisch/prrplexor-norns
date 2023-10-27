@@ -8,6 +8,7 @@ prrplexor_setup = include 'lib/prrplexor'
 
 local MusicUtil = require 'musicutil'
 local UI = require 'ui'
+local Graph = require 'graph'
 
 local tabs = UI.Tabs.new(1, {"cluster", "chaos", "mod"})
 -- TODO refactor into params
@@ -18,6 +19,8 @@ local spread = 0.0
 local pan_mod = 0.0 -- a composite param for amp and freq
 local fb_mod = 0.0 -- a composite param for amp and freq
 local dials
+local flatness = 0.0
+local wave_freq = 2
 
 function init()
 	prrplexor_setup.add_params()
@@ -29,6 +32,29 @@ function init()
 	  fb_mod = UI.Dial.new(10, 12, 18, fb_mod, 0.0, 1.0, 0.01, 0, {}, "", "feedback"),
 	  pan_mod = UI.Dial.new(10, 40, 18, pan_mod, 0.0, 1.0, 0.01, 0, {}, "", "spread"),
 	}
+
+	spec_flat_tracker = poll.set("specFlatness")
+  spec_flat_tracker.callback = function(flat)
+    flatness = flat
+    screen_dirty = true
+  end
+  spec_flat_tracker:start()
+
+  screen_timer = clock.run(
+    function()
+      while true do
+        clock.sleep(1/15)
+        if screen_dirty then
+          flatness_graph:update_functions()
+          redraw()
+          screen_dirty = false
+        end
+      end
+    end
+  )
+
+  init_graph()
+
 	redraw()
 end
 
@@ -115,8 +141,8 @@ function redraw()
     screen.move(19, 52)
     screen.text_center(pan_mod)
   end
-  
-  screen.font_size(8)
+
+  flatness_graph:redraw()
   screen.update()
 end
 
@@ -133,4 +159,23 @@ function generate_cluster()
 end
 
 function transpose(steps)
+end
+
+function init_graph()
+  -- Graphs are created with Graph.new and take the following arguments (all optional):
+  -- Graph.new(x_min, x_max, x_warp, y_min, y_max, y_warp, style, show_x_axis, show_y_axis)
+  flatness_graph = Graph.new(0, 2, "lin", -1, 1, "lin", "point", false, false)
+  -- We then set its position and size.
+  flatness_graph:set_position_and_size(44, 18, 70, 40)
+
+  -- Add a function to the graph instance that takes an x value and outputs the y value.
+  local wave_func = function(x)
+    wave_shape = flatness / 5.
+
+    local sine = math.sin(x * wave_freq * math.pi)
+    local noise = math.random() * 2. - 1.
+    return sine * (1 - wave_shape) + noise * wave_shape
+  end
+  -- Set sample_quality to 3 (high)
+  flatness_graph:add_function(wave_func, 3)
 end
