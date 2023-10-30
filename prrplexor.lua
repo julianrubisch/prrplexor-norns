@@ -20,6 +20,7 @@ local pan_mod = 0.0 -- a composite param for amp and freq
 local fb_mod = 0.0 -- a composite param for amp and freq
 local dials
 local flatness = 0.0
+local amplitude = {0.0, 0.0}
 local wave_freq = 2
 
 function init()
@@ -40,12 +41,27 @@ function init()
   end
   spec_flat_tracker:start()
 
+  amplitude_tracker_l = poll.set("amp_out_l")
+  amplitude_tracker_l.callback = function(amp)
+    amplitude[1] = amp
+    screen_dirty = true
+  end
+  amplitude_tracker_l:start()
+  
+  amplitude_tracker_r = poll.set("amp_out_r")
+  amplitude_tracker_r.callback = function(amp)
+    amplitude[2] = amp
+    screen_dirty = true
+  end
+  amplitude_tracker_r:start()
+
   screen_timer = clock.run(
     function()
       while true do
-        clock.sleep(1/15)
+        clock.sleep(1/10)
         if screen_dirty then
-          flatness_graph:update_functions()
+          flatness_graph_l:update_functions()
+          flatness_graph_r:update_functions()
           redraw()
           screen_dirty = false
         end
@@ -142,7 +158,8 @@ function redraw()
     screen.text_center(pan_mod)
   end
 
-  flatness_graph:redraw()
+  flatness_graph_l:redraw()
+  flatness_graph_r:redraw()
   screen.update()
 end
 
@@ -162,20 +179,29 @@ function transpose(steps)
 end
 
 function init_graph()
-  -- Graphs are created with Graph.new and take the following arguments (all optional):
-  -- Graph.new(x_min, x_max, x_warp, y_min, y_max, y_warp, style, show_x_axis, show_y_axis)
-  flatness_graph = Graph.new(0, 2, "lin", -1, 1, "lin", "point", false, false)
-  -- We then set its position and size.
-  flatness_graph:set_position_and_size(44, 18, 70, 40)
+  flatness_graph_l = Graph.new(0, 2, "lin", -0.5, 0.5, "lin", "point", false, false)
+  flatness_graph_l:set_position_and_size(44, 18, 70, 20)
 
-  -- Add a function to the graph instance that takes an x value and outputs the y value.
-  local wave_func = function(x)
-    wave_shape = flatness / 5.
+  local wave_func_l = function(x)
+    local wave_shape = flatness / 5.
 
     local sine = math.sin(x * wave_freq * math.pi)
     local noise = math.random() * 2. - 1.
-    return sine * (1 - wave_shape) + noise * wave_shape
+    return (sine * (1 - wave_shape) + noise * wave_shape) * amplitude[1]
   end
   -- Set sample_quality to 3 (high)
-  flatness_graph:add_function(wave_func, 3)
+  flatness_graph_l:add_function(wave_func_l, 3)
+  
+  flatness_graph_r = Graph.new(0, 2, "lin", -0.5, 0.5, "lin", "point", false, false)
+  flatness_graph_r:set_position_and_size(44, 44, 70, 20)
+
+  local wave_func_r = function(x)
+    local wave_shape = flatness / 5.
+
+    local sine = math.sin(x * wave_freq * math.pi)
+    local noise = math.random() * 2. - 1.
+    return (sine * (1 - wave_shape) + noise * wave_shape) * amplitude[2]
+  end
+  -- Set sample_quality to 3 (high)
+  flatness_graph_r:add_function(wave_func_r, 3)
 end
