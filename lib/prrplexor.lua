@@ -17,6 +17,9 @@ local specs = {
   {id = 'panAmp', name = 'pan lfo amp', type = 'control', min = 0, max = 1, warp = 'lin', default = 0},
   {id = 'fbFreq', name = 'fb lfo freq', type = 'control', min = 0.001, max = 2, warp = 'exp', default = 0},
   {id = 'fbAmp', name = 'fb lfo amp', type = 'control', min = 0, max = 1, warp = 'lin', default = 0},
+  {type = "separator", name = "filter"},
+  {id = 'filterFreq', name = 'filter freq', type = 'control', min = 20, max = 20000, warp = 'exp', default = 10000},
+  {id = 'filterQ', name = 'filter Q', type = 'control', min = 1, max = 20, warp = 'lin', default = 1},
   {type = "separator", name = "master"},
   {id = 'pan', name = 'pan', type = 'control', min = -1, max = 1, warp = 'lin', default = 0}
 }

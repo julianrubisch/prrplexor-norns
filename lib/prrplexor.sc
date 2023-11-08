@@ -43,6 +43,8 @@ Prrplexor {
 					chain = FFT(LocalBuf(1024), sig);
 					flat = SpecFlatness.kr(chain);
 
+					sig = BLowPass.ar(sig, \filterFreq.kr(10000), 1/(\filterQ.kr(1)));
+
 					sig = Pan2.ar(sig, Clip.ar((\pan.kr(0) + (panLFO * \panAmp.kr(0))), -1, 1).lag3(\pan_slew.kr(0.5)));
 					Out.ar(0, sig);
 					Out.kr(\specFlatOut.kr(1), flat);
@@ -70,6 +72,8 @@ Prrplexor {
 			\panAmp -> 0,
 			\fbFreq -> 1,
 			\fbAmp -> 0,
+			\filterFreq -> 10000,
+			\filterQ -> 1,
 			\sustain -> 1,
 			\release -> 1
 		];
@@ -83,8 +87,6 @@ Prrplexor {
 		});
 
 		specFlatness = Bus.control(s);
-
-		s.sync;
 	}
 
 	playVoice { |voiceKey, freq|
