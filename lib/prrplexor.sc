@@ -15,7 +15,7 @@ Prrplexor {
 
 			s.waitForBoot {
 				SynthDef.new(\prrplexor_osc, {
-					var sig, envelope, panLFO, fbLFO, chain, flat;
+					var sig, envelope, panLFO, fbLFO, chain, flat, trig;
 
 					fbLFO = LFTri.ar(
 						\fbFreq.kr(1),
@@ -32,11 +32,24 @@ Prrplexor {
 						Rand(0, 2pi)
 					);
 
-					envelope = EnvGen.kr(
-						envelope: Env.asr(attackTime: \attack.kr(0.5), sustainLevel: \sustain.kr(1), releaseTime: \release.kr(1)),
-						gate: \stopGate.kr(1),
-						doneAction: 2
-					);
+					trig = Dust.kr(2);
+
+					envelope = Select.kr(\mode.kr(0), [
+						{
+							EnvGen.ar(
+								envelope: Env.asr(attackTime: \attack.kr(0.5), sustainLevel: \sustain.kr(1), releaseTime: \release.kr(1)),
+								gate: \stopGate.kr(1),
+								doneAction: 2
+							);
+						},
+						{
+							EnvGen.ar(
+								envelope: Env.perc,
+								gate: trig,
+								doneAction: 0
+							);
+						}
+					]);
 
 					sig = sig * envelope * \amp.kr(0);
 
@@ -75,7 +88,8 @@ Prrplexor {
 			\filterFreq -> 10000,
 			\filterQ -> 1,
 			\sustain -> 1,
-			\release -> 1
+			\release -> 1,
+			\mode -> 0 // 0 == static, 1 == dust, 2 == grid
 		];
 
 		singleVoices = Dictionary.new;

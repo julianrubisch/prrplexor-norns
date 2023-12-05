@@ -7,6 +7,8 @@ function round_form(param,quant,form)
 end
 
 local specs = {
+  {type = "separator", name = "trig"},
+  {id = 'mode', name = 'mode', type = 'option', options = {'constant', 'dust'}, default = 1},
   {type = "separator", name = "synthesis"},
   {id = 'amp', name = 'level', type = 'control', min = 0, max = 1, warp = 'lin', default = 0.1},
   {id = 'fb', name = 'feedback', type = 'control', min = 0, max = 10, warp = 'lin', default = 0.5},
@@ -18,7 +20,7 @@ local specs = {
   {id = 'fbFreq', name = 'fb lfo freq', type = 'control', min = 0.001, max = 2, warp = 'exp', default = 0},
   {id = 'fbAmp', name = 'fb lfo amp', type = 'control', min = 0, max = 1, warp = 'lin', default = 0},
   {type = "separator", name = "filter"},
-  {id = 'filterFreq', name = 'filter freq', type = 'control', min = 20, max = 20000, warp = 'exp', default = 10000},
+  {id = 'filterFreq', name = 'filter freq', type = 'control', min = 20, max = 20000, warp = 'exp', default = 10000, formatter = function(param) return (round_form(param:get(),0.01," s")) end},
   {id = 'filterQ', name = 'filter Q', type = 'control', min = 1, max = 20, warp = 'lin', default = 1},
   {type = "separator", name = "master"},
   {id = 'pan', name = 'pan', type = 'control', min = -1, max = 1, warp = 'lin', default = 0}
@@ -62,8 +64,14 @@ function PRRPLEXOR.add_params()
       -- if the parameter type isn't a separator, then we want to assign it an action to control the engine:
       if p.type ~= 'separator' then
         params:set_action(voices[i].."_"..p.id, function(x)
-          -- use the line's 'id' as the engine command, eg. engine.amp or engine.cutoff_env,
+          -- use the line's 'id' as the engine command, eg. engine.amp or engine.c+utoff_env,
           --  and send the voice and the value:
+
+          -- if we are dealing with an `option`, let's compensate for the 1-based index
+          if p.type == "option" then
+            x = x - 1
+          end
+
           engine[p.id](voices[i],x) -- 
           if voices[i] == "all" then -- it's nice to echo 'all' changes back to the parameters themselves
             -- since 'all' voice corresponds to the first entry in 'voices' table,

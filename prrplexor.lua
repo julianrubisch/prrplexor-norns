@@ -10,8 +10,9 @@ local MusicUtil = require 'musicutil'
 local UI = require 'ui'
 local Graph = require 'graph'
 local FilterGraph = require 'filtergraph'
+local Formatters = require 'formatters'
 
-local tabs = UI.Tabs.new(1, {"cluster", "chaos", "mod", "filter"})
+local tabs = UI.Tabs.new(1, {"cluster", "chaos", "mod", "filter", "trig"})
 -- TODO refactor into params
 local cluster_size = 5
 local cluster_width = 1 -- octaves
@@ -36,6 +37,8 @@ function init()
 	  filter_freq = UI.Dial.new(10, 12, 18, params:get("all_filterFreq"), 20, 20000, 1, 0, {}, "", "freq"),
 	  filter_q = UI.Dial.new(10, 40, 18, params:get("all_filterQ"), 1, 20, 0.1, 0, {}, "", "Q")
 	}
+	
+	trig_mode_list = UI.List.new(0, 24, params:get("all_mode"), {"constant", "dust"})
 
 	spec_flat_tracker = poll.set("specFlatness")
   spec_flat_tracker.callback = function(flat)
@@ -107,6 +110,9 @@ function enc(n, d)
       params:delta("all_filterFreq", d)
       dials["filter_freq"]:set_value(params:get("all_filterFreq"))
       filter_graph:edit("lowpass", 12, params:get("all_filterFreq"), params:get("all_filterQ")/20)
+    elseif tabs.index == 5 then
+      params:delta("all_mode", d)
+      trig_mode_list:set_index(params:get("all_mode"))
     end
   elseif n == 3 then
     if tabs.index == 1 then
@@ -171,16 +177,19 @@ function redraw()
   elseif tabs.index == 4 then
     dials["filter_freq"]:redraw()
     dials["filter_q"]:redraw()
-    screen.move(19, 24)
-    screen.text_center(params:get("all_filterFreq"))
+    screen.move(64, 24)
+    screen.text_center(Formatters.format_freq_raw(params:get("all_filterFreq")))
     screen.move(19, 52)
     screen.text_center(params:get("all_filterQ"))
+  -- trig
+  elseif tabs.index == 5 then
+    trig_mode_list:redraw()
   end
 
   -- graphs
   if tabs.index == 4 then
     filter_graph:redraw()
-  else 
+  else
     flatness_graph_l:redraw()
     flatness_graph_r:redraw()
   end
@@ -228,7 +237,7 @@ function init_graphs()
   end
   -- Set sample_quality to 3 (high)
   flatness_graph_r:add_function(wave_func_r, 3)
-  
+
   filter_graph = FilterGraph.new()
   filter_graph:set_position_and_size(44, 18, 70, 40)
 end
